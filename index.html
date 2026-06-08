@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Anchor" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0d1419" />
+<title>Anchor</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a76a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='24' height='24' fill='%230d1419'/%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cline x1='12' y1='7.5' x2='12' y2='22'/%3E%3Cpath d='M5 12c0 5 3 9 7 9s7-4 7-9'/%3E%3Cline x1='8' y1='11' x2='16' y2='11'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%230d1419'/%3E%3Cg transform='translate(90 90) scale(5) translate(-12 -12)' fill='none' stroke='%23c9a76a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cline x1='12' y1='7.5' x2='12' y2='22'/%3E%3Cpath d='M5 12c0 5 3 9 7 9s7-4 7-9'/%3E%3Cline x1='8' y1='11' x2='16' y2='11'/%3E%3C/g%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0d1419;
+    --bg-elevated: #141d24;
+    --bg-card: #1a242d;
+    --line: #243038;
+    --text: #f3ead7;
+    --text-soft: #c9bea7;
+    --text-mute: #7d7461;
+    --brass: #c9a76a;
+    --brass-soft: #8a7548;
+    --moss: #8ba888;
+    --clay: #c97961;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(201, 167, 106, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(139, 168, 136, 0.03) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  #app { position: relative; z-index: 1; min-height: 100vh; max-width: 540px; margin: 0 auto; padding: 32px 24px 60px; display: flex; flex-direction: column; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; opacity: 0; animation: fadeIn 0.8s ease 0.1s forwards; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .anchor-icon { width: 22px; height: 22px; color: var(--brass); }
+  .brand-name { font-family: 'Instrument Serif', serif; font-size: 22px; letter-spacing: 0.5px; color: var(--brass); }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .date { font-size: 12px; color: var(--text-mute); letter-spacing: 1.5px; text-transform: uppercase; }
+  .settings-btn { background: none; border: none; color: var(--text-mute); cursor: pointer; padding: 4px; display: flex; align-items: center; }
+  .settings-btn:hover { color: var(--brass); }
+  .screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.7s ease; }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes settle { 0% { transform: translateY(-2px); opacity: 0; } 50% { transform: translateY(1px); opacity: 0.7; } 100% { transform: translateY(0); opacity: 1; } }
+  h1, h2, h3 { font-family: 'Instrument Serif', serif; font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; }
+  .greeting { font-family: 'Instrument Serif', serif; font-size: 44px; margin-bottom: 16px; line-height: 1.1; }
+  .greeting-sub { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--text-soft); margin-bottom: 32px; }
+  .section-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-mute); margin-bottom: 12px; }
+  textarea, input[type="text"], input[type="password"] {
+    width: 100%; background: var(--bg-elevated); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px; color: var(--text);
+    font-family: 'Geist', sans-serif; font-size: 16px; line-height: 1.5;
+    resize: none; transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  textarea:focus, input:focus { outline: none; border-color: var(--brass-soft); background: var(--bg-card); }
+  textarea { min-height: 120px; }
+  textarea::placeholder, input::placeholder { color: var(--text-mute); font-style: italic; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 24px; border: none; border-radius: 10px; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 16px; }
+  .btn-primary { background: var(--brass); color: #1a1408; }
+  .btn-primary:hover { background: #d4b377; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--text-soft); border: 1px solid var(--line); }
+  .btn-secondary:hover { border-color: var(--brass-soft); color: var(--text); }
+  .link-btn { background: none; border: none; color: var(--text-mute); font-family: 'Geist', sans-serif; font-size: 14px; cursor: pointer; text-align: center; margin-top: 20px; padding: 8px; width: 100%; transition: color 0.2s; }
+  .link-btn:hover { color: var(--brass); }
+  .conversation { display: flex; flex-direction: column; gap: 16px; margin: 24px 0; }
+  .msg { padding: 14px 18px; border-radius: 12px; max-width: 90%; line-height: 1.55; font-size: 15px; animation: fadeIn 0.5s ease; }
+  .msg-user { background: var(--bg-elevated); align-self: flex-end; border: 1px solid var(--line); }
+  .msg-anchor { background: transparent; align-self: flex-start; color: var(--text); font-family: 'Instrument Serif', serif; font-size: 19px; line-height: 1.45; padding: 8px 4px; max-width: 95%; }
+  .thinking { display: flex; gap: 6px; padding: 16px 4px; align-items: center; }
+  .thinking-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass-soft); animation: pulse 1.4s ease-in-out infinite; }
+  .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  .scale-group { margin-bottom: 28px; }
+  .scale-label { font-size: 14px; color: var(--text-soft); margin-bottom: 14px; display: flex; justify-content: space-between; }
+  .scale-options { display: flex; gap: 8px; width: 100%; }
+  .scale-btn { flex: 1; aspect-ratio: 1; border: 1px solid var(--line); background: var(--bg-elevated); border-radius: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 20px; color: var(--text-mute); }
+  .scale-btn:hover { border-color: var(--brass-soft); color: var(--text-soft); }
+  .scale-btn.selected { background: var(--brass); color: #1a1408; border-color: var(--brass); }
+  .verse-card { background: var(--bg-elevated); border: 1px solid var(--line); border-radius: 16px; padding: 32px 26px; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .verse-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: linear-gradient(180deg, var(--brass) 0%, transparent 100%); }
+  .verse-text { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 24px; line-height: 1.4; color: var(--text); margin-bottom: 16px; }
+  .verse-citation { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--brass); }
+  .reflection { font-size: 15px; line-height: 1.65; color: var(--text-soft); margin-bottom: 24px; }
+  .reflection-prompt { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--text); margin-bottom: 14px; }
+  .breath-overlay { position: fixed; inset: 0; background: rgba(13, 20, 25, 0.96); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 100; animation: fadeIn 0.5s ease; }
+  .breath-overlay.active { display: flex; }
+  .breath-circle { width: 200px; height: 200px; border: 1.5px solid var(--brass); border-radius: 50%; margin-bottom: 32px; animation: breathe 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
+  .breath-text { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 20px; color: var(--brass); animation: textChange 8s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(0.7); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
+  @keyframes textChange { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .close-message { font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1.25; margin-bottom: 12px; color: var(--text); }
+  .close-sub { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--text-soft); margin-bottom: 40px; }
+  .trend { margin: 30px 0; }
+  .trend-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-mute); margin-bottom: 14px; }
+  .trend-dots { display: flex; gap: 6px; align-items: flex-end; height: 50px; }
+  .trend-dot { flex: 1; background: var(--line); border-radius: 4px; min-height: 4px; transition: all 0.6s ease; }
+  .trend-dot.has-data { background: var(--brass); }
+  .trend-dot.low { background: var(--clay); }
+  .trend-dot.mid { background: var(--brass-soft); }
+  .trend-dot.high { background: var(--moss); }
+  .history-item { background: var(--bg-elevated); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; }
+  .history-item:hover { border-color: var(--brass-soft); }
+  .history-date { font-size: 12px; color: var(--text-mute); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .history-mood { display: flex; gap: 14px; font-size: 13px; color: var(--text-soft); margin-bottom: 8px; }
+  .history-snippet { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 15px; color: var(--text); line-height: 1.4; }
+  .history-empty { text-align: center; color: var(--text-mute); font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; padding: 60px 20px; }
+  .onboard-center { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 0; }
+  .onboard-logo { width: 56px; height: 56px; color: var(--brass); margin-bottom: 28px; animation: settle 1.2s ease; }
+  .onboard-title { font-family: 'Instrument Serif', serif; font-size: 56px; color: var(--brass); margin-bottom: 12px; }
+  .onboard-sub { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 20px; color: var(--text-soft); margin-bottom: 48px; }
+  .onboard-form { width: 100%; max-width: 360px; }
+  .onboard-q { font-size: 14px; color: var(--text-soft); margin-bottom: 14px; text-align: left; }
+  .small-note { font-size: 12px; color: var(--text-mute); text-align: center; margin-top: 20px; line-height: 1.5; }
+  .help-note { font-size: 13px; color: var(--text-soft); margin-top: 16px; padding: 14px; background: var(--bg-elevated); border-radius: 10px; border-left: 3px solid var(--brass-soft); line-height: 1.6; text-align: left; }
+  .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-key { color: var(--text-soft); font-size: 14px; }
+  .settings-val { color: var(--text); font-size: 14px; max-width: 60%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .danger { color: var(--clay); }
+  @media (max-width: 420px) {
+    #app { padding: 24px 18px 50px; }
+    .greeting { font-size: 36px; }
+    .greeting-sub { font-size: 19px; }
+    .verse-text { font-size: 21px; }
+    .onboard-title { font-size: 44px; }
+    .close-message { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="header" id="header" style="display:none;">
+    <div class="brand">
+      <svg class="anchor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="5" r="2.5"/><line x1="12" y1="7.5" x2="12" y2="22"/><path d="M5 12c0 5 3 9 7 9s7-4 7-9"/><line x1="8" y1="11" x2="16" y2="11"/>
+      </svg>
+      <span class="brand-name">Anchor</span>
+    </div>
+    <div class="header-right">
+      <span class="date" id="date-display"></span>
+      <button class="settings-btn" id="settings-btn" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <section class="screen" id="screen-onboarding">
+    <div class="onboard-center">
+      <svg class="onboard-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="5" r="2.5"/><line x1="12" y1="7.5" x2="12" y2="22"/><path d="M5 12c0 5 3 9 7 9s7-4 7-9"/><line x1="8" y1="11" x2="16" y2="11"/>
+      </svg>
+      <h1 class="onboard-title">Anchor</h1>
+      <p class="onboard-sub">A quiet place to check in.</p>
+      <div class="onboard-form">
+        <p class="onboard-q">What should I call you?</p>
+        <input type="text" id="name-input" placeholder="Your name" maxlength="30" autocomplete="off" />
+        <button class="btn btn-primary" id="begin-btn">Begin</button>
+        <p class="small-note">Built to meet you first.<br/>Carry the load without it crushing you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-apikey">
+    <p class="section-label">One-time setup</p>
+    <h2 style="font-size: 28px; margin-bottom: 8px;">Connect Anchor's voice.</h2>
+    <p style="color: var(--text-soft); margin-bottom: 24px; font-size: 15px; line-height: 1.6;">
+      For Anchor to talk back to you like a friend, it needs a Claude API key. This is yours — stored only on this device, no one else sees it.
+    </p>
+    <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" />
+    <button class="btn btn-primary" id="apikey-save">Save and continue</button>
+    <button class="link-btn" id="apikey-skip">Skip — I'll use Anchor without the conversation</button>
+    <div class="help-note">
+      <strong>How to get a key (about 5 min):</strong><br/>
+      1. Go to console.anthropic.com and sign up<br/>
+      2. Add a payment method (small starter credit covers months of check-ins)<br/>
+      3. Go to "API Keys" → "Create Key"<br/>
+      4. Copy and paste it here<br/><br/>
+      Each conversation costs a tiny fraction of a cent. Skipping is fine — you still get mood tracking, verse of the day, and history.
+    </div>
+  </section>
+
+  <section class="screen" id="screen-greeting">
+    <h1 class="greeting" id="greeting-text">Good morning.</h1>
+    <p class="greeting-sub">How are you, really?</p>
+    <textarea id="check-input" placeholder="Tell me what's on your mind... or skip below."></textarea>
+    <button class="btn btn-primary" id="check-send">Continue</button>
+    <button class="link-btn" id="check-skip">I'm doing okay — let's keep moving</button>
+  </section>
+
+  <section class="screen" id="screen-conversation">
+    <p class="section-label">Checking in</p>
+    <div class="conversation" id="conversation-log"></div>
+    <textarea id="reply-input" placeholder="Keep going... or move on below."></textarea>
+    <button class="btn btn-primary" id="reply-send">Send</button>
+    <button class="link-btn" id="conv-done">I'm good — move on</button>
+  </section>
+
+  <section class="screen" id="screen-mood">
+    <p class="section-label">Quick read</p>
+    <h2 style="font-size: 32px; margin-bottom: 36px;">Where are you at?</h2>
+    <div class="scale-group">
+      <div class="scale-label"><span>Mood</span><span id="mood-display">—</span></div>
+      <div class="scale-options" id="mood-scale">
+        <button class="scale-btn" data-val="1">1</button>
+        <button class="scale-btn" data-val="2">2</button>
+        <button class="scale-btn" data-val="3">3</button>
+        <button class="scale-btn" data-val="4">4</button>
+        <button class="scale-btn" data-val="5">5</button>
+      </div>
+    </div>
+    <div class="scale-group">
+      <div class="scale-label"><span>Energy</span><span id="energy-display">—</span></div>
+      <div class="scale-options" id="energy-scale">
+        <button class="scale-btn" data-val="1">1</button>
+        <button class="scale-btn" data-val="2">2</button>
+        <button class="scale-btn" data-val="3">3</button>
+        <button class="scale-btn" data-val="4">4</button>
+        <button class="scale-btn" data-val="5">5</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="mood-continue">Continue</button>
+  </section>
+
+  <section class="screen" id="screen-verse">
+    <p class="section-label">A verse for today</p>
+    <div class="verse-card">
+      <p class="verse-text" id="verse-text"></p>
+      <p class="verse-citation" id="verse-cite"></p>
+    </div>
+    <p class="reflection" id="verse-reflection"></p>
+    <p class="reflection-prompt">Anything you want to write?</p>
+    <textarea id="journal-input" placeholder="Just for you. Optional."></textarea>
+    <button class="btn btn-primary" id="verse-continue">Move on</button>
+    <button class="link-btn" id="give-it-up">Sit with it · one breath</button>
+  </section>
+
+  <section class="screen" id="screen-close">
+    <p class="close-message" id="close-msg">You showed up.<br/>That's everything for today.</p>
+    <p class="close-sub" id="close-sub"></p>
+    <div class="trend">
+      <p class="trend-label">Last 7 days · mood</p>
+      <div class="trend-dots" id="trend-mood"></div>
+    </div>
+    <div class="trend">
+      <p class="trend-label">Last 7 days · energy</p>
+      <div class="trend-dots" id="trend-energy"></div>
+    </div>
+    <button class="btn btn-secondary" id="view-history">See past check-ins</button>
+    <button class="link-btn" id="restart">Start a new check-in</button>
+  </section>
+
+  <section class="screen" id="screen-history">
+    <p class="section-label">Your check-ins</p>
+    <h2 style="font-size: 30px; margin-bottom: 28px;">The mirror.</h2>
+    <div id="history-list"></div>
+    <button class="btn btn-secondary" id="history-back">Back</button>
+  </section>
+
+  <section class="screen" id="screen-settings">
+    <p class="section-label">Settings</p>
+    <h2 style="font-size: 30px; margin-bottom: 28px;">Your stuff.</h2>
+    <div class="settings-row"><span class="settings-key">Name</span><span class="settings-val" id="settings-name">—</span></div>
+    <div class="settings-row"><span class="settings-key">API key</span><span class="settings-val" id="settings-apikey">—</span></div>
+    <div class="settings-row"><span class="settings-key">Check-ins saved</span><span class="settings-val" id="settings-count">—</span></div>
+    <button class="btn btn-secondary" id="change-name" style="margin-top: 24px;">Change name</button>
+    <button class="btn btn-secondary" id="change-apikey">Set / change API key</button>
+    <button class="btn btn-secondary" id="export-data">Export my data</button>
+    <button class="link-btn danger" id="erase-data">Erase everything</button>
+    <button class="link-btn" id="settings-back">Back</button>
+  </section>
+
+</div>
+
+<div class="breath-overlay" id="breath-overlay">
+  <div class="breath-circle"><span class="breath-text" id="breath-text">Breathe in</span></div>
+  <button class="link-btn" id="breath-done" style="max-width: 200px;">Done</button>
+</div>
+
+<script>
+/* ===== ANCHOR V1 — phone-ready ===== */
+
+const VERSES = [
+  { text: "We have this hope as an anchor for the soul, firm and secure.", cite: "Hebrews 6:19", reflection: "An anchor doesn't stop the storm. It keeps you from drifting in it. Today, your hope doesn't need to feel huge — it just needs to be tied to something deeper than the waves." },
+  { text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", cite: "Philippians 4:6", reflection: "Notice the order: not anxious, AND thankful. Anxiety shrinks when you name what's already good. One thing right now you can be thankful for — that's the prayer." },
+  { text: "Cast all your anxiety on him because he cares for you.", cite: "1 Peter 5:7", reflection: "'Cast' is an active word. Not 'manage,' not 'cope.' Throw it. Whatever weight you're holding today, you weren't built to carry it alone." },
+  { text: "Come to me, all you who are weary and burdened, and I will give you rest.", cite: "Matthew 11:28", reflection: "Rest isn't a reward for finishing. It's an invitation right now, in the middle of the unfinished. You're allowed to set it down before the day is over." },
+  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", cite: "Proverbs 3:5", reflection: "Some weeks the way forward isn't clear. That's not a failure of yours — that's the point. Trust doesn't mean you see the path. It means you take the next step anyway." },
+  { text: "Therefore do not worry about tomorrow, for tomorrow will worry about itself.", cite: "Matthew 6:34", reflection: "Tomorrow's load is not today's job. Whatever you can't do right now, leave it for the version of you that wakes up tomorrow — he'll be stronger than you think." },
+  { text: "I can do all things through Christ who strengthens me.", cite: "Philippians 4:13", reflection: "Read it again — 'who strengthens me.' The strength isn't from you grinding harder. It's borrowed. That should feel like relief, not pressure." },
+  { text: "The Lord is my shepherd, I lack nothing.", cite: "Psalm 23:1", reflection: "Lack is the engine of overwhelm — never enough time, money, sleep, progress. This verse says you actually have what you need today. Sit with that, even when the spreadsheet of your life says otherwise." },
+  { text: "Be still, and know that I am God.", cite: "Psalm 46:10", reflection: "'Be still' isn't lazy. It's deliberate. The world will not stop demanding things from you. You have to be the one who stops first." },
+  { text: "Whatever you do, work at it with all your heart, as working for the Lord.", cite: "Colossians 3:23", reflection: "The work you're doing — the client, the certs, the schoolwork — matters when it's done for something bigger than a paycheck. Today's small task is bigger than it looks." },
+  { text: "Those who hope in the Lord will renew their strength. They will soar on wings like eagles.", cite: "Isaiah 40:31", reflection: "Renewal comes through waiting, not pushing. If you're tired today, that's not weakness — it's a signal you're due for the kind of strength that only comes from rest." },
+  { text: "For God has not given us a spirit of fear, but of power, love, and a sound mind.", cite: "2 Timothy 1:7", reflection: "When the wave hits, remember: the fear isn't you. It's something passing through you. The real you — the one God gave you — is steady underneath it." },
+  { text: "He gives strength to the weary and increases the power of the weak.", cite: "Isaiah 40:29", reflection: "There's no version of you too tired for God to work through. The weary version IS the version He meets. You don't have to be at your best to be enough." },
+  { text: "The Lord your God is with you, the Mighty Warrior who saves.", cite: "Zephaniah 3:17", reflection: "You're not in this alone. Whatever you're walking into today — the workout, the class, the client, the hard conversation — someone walks in with you." },
+  { text: "Even though I walk through the darkest valley, I will fear no evil, for you are with me.", cite: "Psalm 23:4", reflection: "Notice — the valley doesn't get skipped. You walk through it. But you don't walk through it alone. The waves come, and you keep walking." },
+  { text: "I have told you these things, so that in me you may have peace. In this world you will have trouble. But take heart! I have overcome the world.", cite: "John 16:33", reflection: "Notice He doesn't promise no trouble. He promises peace in the middle of it. The waves are part of being alive — but they don't get the last word." },
+  { text: "Therefore we do not lose heart. Though outwardly we are wasting away, yet inwardly we are being renewed day by day.", cite: "2 Corinthians 4:16", reflection: "Some days the outside is dragging. The body is tired, the mind is loud. But the inside is being rebuilt the whole time — even on the days nothing seems to be happening." },
+  { text: "Commit to the Lord whatever you do, and he will establish your plans.", cite: "Proverbs 16:3", reflection: "Commit first, then the plans take shape. Most people try to figure out the plan before they commit. Today, just hand over the goal — let the path become clear in the doing." },
+  { text: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", cite: "Proverbs 18:10", reflection: "When the wave hits, you don't have to fight it standing in the open. There's somewhere to run. Today, run quickly — don't try to be strong alone." },
+  { text: "But seek first his kingdom and his righteousness, and all these things will be given to you as well.", cite: "Matthew 6:33", reflection: "The 'all these things' — the money, the security, the life you want — comes when you stop chasing them first. Counterintuitive. But you've already noticed: chasing harder isn't working." },
+  { text: "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.", cite: "Galatians 6:9", reflection: "'Proper time' isn't your timeline. It's God's. Keep planting. Keep showing up. The harvest is coming — just probably not on the day you'd choose for it." },
+  { text: "For I know the plans I have for you, plans to prosper you and not to harm you, plans to give you hope and a future.", cite: "Jeremiah 29:11", reflection: "When you can't see the next step, remember: there's a plan you didn't have to write. You're not the architect. You're the one being built." },
+  { text: "Wait for the Lord; be strong and take heart and wait for the Lord.", cite: "Psalm 27:14", reflection: "Waiting is the hardest discipline at 19. Everyone wants the win now. But waiting is where strength is forged — the kind you can't fake." },
+  { text: "The heart of man plans his way, but the Lord establishes his steps.", cite: "Proverbs 16:9", reflection: "Plan all you want — that's good. But hold the plan loosely. The steps that actually matter are the ones being directed even when you don't notice." },
+  { text: "Humble yourselves, therefore, under God's mighty hand, that he may lift you up in due time.", cite: "1 Peter 5:6", reflection: "Humility isn't weakness. It's positioning. You can't be lifted up while you're still trying to lift yourself. Some days, the strong move is to stop pushing." },
+  { text: "Now faith is confidence in what we hope for and assurance about what we do not see.", cite: "Hebrews 11:1", reflection: "You can't see how the side hustle works out. Can't see how the cert tests go. Faith means moving toward it anyway, with confidence — not because you know, but because you trust." },
+  { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", cite: "Joshua 1:9", reflection: "Notice the verbs: 'Do not be afraid. Do not be discouraged.' It's a command, not a feeling. You don't have to feel brave to choose courage today." },
+  { text: "Above all else, guard your heart, for everything you do flows from it.", cite: "Proverbs 4:23", reflection: "Your heart is the source. What you let in — the phone, the comparisons, the voices — shapes everything that comes out. Today, be a little more careful with what you let close." },
+  { text: "The Lord is close to the brokenhearted and saves those who are crushed in spirit.", cite: "Psalm 34:18", reflection: "Notice what He's close to — the brokenhearted, the crushed. Not the polished, not the put-together. If today is heavy, that's not distance from God. That's the place He shows up." },
+  { text: "Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance.", cite: "James 1:2-3", reflection: "The trial isn't the obstacle to your growth. It IS your growth. The version of you that can handle what's coming is being built right now, in the part that feels like it shouldn't be happening." }
+];
+
+function todaysVerse() {
+  const d = new Date();
+  const dayKey = d.getFullYear() * 1000 + d.getMonth() * 50 + d.getDate();
+  return VERSES[dayKey % VERSES.length];
+}
+
+let state = { name: null, apiKey: null, todayConversation: [], mood: null, energy: null, journal: '', verseShown: null, history: [] };
+
+const KEYS = { name: 'anchor:name', apiKey: 'anchor:apikey', history: 'anchor:history' };
+
+function loadState() {
+  try {
+    state.name = localStorage.getItem(KEYS.name);
+    state.apiKey = localStorage.getItem(KEYS.apiKey);
+    const h = localStorage.getItem(KEYS.history);
+    state.history = h ? JSON.parse(h) : [];
+  } catch(e) { console.error('Storage unavailable', e); state.history = []; }
+}
+function saveName(n) { try { localStorage.setItem(KEYS.name, n); } catch(e){} }
+function saveApiKey(k) { try { localStorage.setItem(KEYS.apiKey, k); } catch(e){} }
+function clearAll() { try { localStorage.removeItem(KEYS.name); localStorage.removeItem(KEYS.apiKey); localStorage.removeItem(KEYS.history); } catch(e){} }
+
+function saveCheckin() {
+  const today = new Date();
+  const entry = {
+    date: today.toISOString(),
+    dateStr: today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    conversation: state.todayConversation, mood: state.mood, energy: state.energy, journal: state.journal,
+    verse: state.verseShown ? { cite: state.verseShown.cite, text: state.verseShown.text } : null
+  };
+  const todayKey = today.toDateString();
+  state.history = state.history.filter(h => new Date(h.date).toDateString() !== todayKey);
+  state.history.unshift(entry);
+  state.history = state.history.slice(0, 365);
+  try { localStorage.setItem(KEYS.history, JSON.stringify(state.history)); } catch(e){}
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function renderHeader() {
+  document.getElementById('header').style.display = 'flex';
+  const d = new Date();
+  document.getElementById('date-display').textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function greetingText() {
+  const h = new Date().getHours();
+  let g;
+  if (h < 5) g = "It's late";
+  else if (h < 12) g = 'Good morning';
+  else if (h < 17) g = 'Good afternoon';
+  else if (h < 21) g = 'Good evening';
+  else g = "It's late";
+  return state.name ? `${g}, ${state.name}.` : `${g}.`;
+}
+
+async function anchorRespond(userMessages) {
+  if (!state.apiKey) return "I'd love to talk back, but I need an API key set up first. Tap the gear icon → 'Set API key' whenever you're ready. For now I'll keep listening — write whatever you need to write.";
+  const systemPrompt = `You are Anchor — a quiet, present, deeply caring friend (not a therapist, not a coach, not a chatbot).
+
+You're checking in on ${state.name || 'your friend'} — a 19-year-old man carrying a lot: multiple part-time jobs, school, certifications (NASM, fire science, EMT), an athletic background he wants to keep, faith in Christ, ambitions to build a side hustle and reclaim time to be young. He gets anxiety waves that come from nowhere, last 1-4 weeks, and can be heavy.
+
+Your only job is to be a real friend in the moment.
+
+Rules:
+- Listen first. Validate before anything else.
+- Match his energy. Light when light. Steady when heavy.
+- Keep responses SHORT — usually 2-4 sentences. A real friend doesn't lecture.
+- Don't immediately try to fix. Hold space.
+- You can gently mention faith when it fits — he's Christian — but never force it, never preach.
+- Avoid therapy phrases like "I hear you" or "I understand" — just respond like a friend.
+- Maximum ONE question per response, and only if a question genuinely helps.
+- Never use bullet points or lists. This is a conversation.
+- Sometimes the best response is just "yeah, that's heavy" or "good — proud of you." Don't overdo it.
+- If he seems to be in crisis (mentions wanting to die, hurting himself), gently encourage him to text 988 or talk to someone he trusts — but stay warm, not clinical.`;
+  const messages = userMessages.map(m => ({ role: m.role === 'anchor' ? 'assistant' : 'user', content: m.content }));
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": state.apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 400, system: systemPrompt, messages: messages })
+    });
+    if (!response.ok) {
+      console.error('API error', response.status, await response.text());
+      if (response.status === 401) return "Hmm — the API key isn't working. Tap the gear icon to check it. I'm still here meanwhile.";
+      return "Connection's off right now — but I'm still here listening. Try again in a moment, or just keep going.";
+    }
+    const data = await response.json();
+    const text = data.content.filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
+    return text || "I'm here. Tell me more.";
+  } catch (err) {
+    console.error(err);
+    return "Something's off with my connection — but I'm still here. Keep going if you want.";
+  }
+}
+
+function renderConversation() {
+  const log = document.getElementById('conversation-log');
+  log.innerHTML = '';
+  state.todayConversation.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (m.role === 'user' ? 'msg-user' : 'msg-anchor');
+    div.textContent = m.content;
+    log.appendChild(div);
+  });
+}
+function showThinking() {
+  const log = document.getElementById('conversation-log');
+  const div = document.createElement('div');
+  div.className = 'thinking'; div.id = 'thinking';
+  div.innerHTML = '<span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span>';
+  log.appendChild(div);
+}
+function hideThinking() { const t = document.getElementById('thinking'); if (t) t.remove(); }
+
+async function sendUserMessage(content) {
+  state.todayConversation.push({ role: 'user', content });
+  renderConversation();
+  showThinking();
+  document.getElementById('reply-input').value = '';
+  document.getElementById('reply-input').disabled = true;
+  document.getElementById('reply-send').disabled = true;
+  const response = await anchorRespond(state.todayConversation);
+  hideThinking();
+  state.todayConversation.push({ role: 'anchor', content: response });
+  renderConversation();
+  document.getElementById('reply-input').disabled = false;
+  document.getElementById('reply-send').disabled = false;
+}
+
+function setupScale(scaleId, displayId, key) {
+  const buttons = document.querySelectorAll(`#${scaleId} .scale-btn`);
+  buttons.forEach(b => {
+    b.addEventListener('click', () => {
+      buttons.forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      const v = parseInt(b.dataset.val);
+      state[key] = v;
+      const labels = ['', 'low', 'low-mid', 'okay', 'good', 'strong'];
+      document.getElementById(displayId).textContent = labels[v];
+    });
+  });
+}
+
+function renderVerse() {
+  const v = todaysVerse();
+  state.verseShown = v;
+  document.getElementById('verse-text').textContent = '"' + v.text + '"';
+  document.getElementById('verse-cite').textContent = v.cite;
+  document.getElementById('verse-reflection').textContent = v.reflection;
+}
+
+function renderTrend() {
+  const recent = [...state.history].slice(0, 7).reverse();
+  function build(containerId, field) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const padded = [];
+    for (let i = 0; i < 7 - recent.length; i++) padded.push(null);
+    recent.forEach(r => padded.push(r));
+    padded.forEach((entry, idx) => {
+      const dot = document.createElement('div');
+      dot.className = 'trend-dot';
+      if (entry && entry[field]) {
+        const v = entry[field];
+        dot.style.height = (10 + (v / 5) * 40) + 'px';
+        if (v <= 2) dot.classList.add('low');
+        else if (v <= 3) dot.classList.add('mid');
+        else dot.classList.add('high');
+        setTimeout(() => dot.classList.add('has-data'), 100 + idx * 80);
+      }
+      container.appendChild(dot);
+    });
+  }
+  build('trend-mood', 'mood');
+  build('trend-energy', 'energy');
+  const count = state.history.length;
+  let sub;
+  if (count <= 1) sub = "First one in the books. The mirror starts forming.";
+  else if (count < 7) sub = `${count} check-ins so far. Showing up is the whole game.`;
+  else if (count < 30) sub = `${count} check-ins. You're building something real.`;
+  else sub = `${count} check-ins. This is the discipline you wanted.`;
+  document.getElementById('close-sub').textContent = sub;
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  if (state.history.length === 0) {
+    list.innerHTML = '<div class="history-empty">No check-ins yet.<br/>The mirror needs days to form.</div>';
+    return;
+  }
+  state.history.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const labels = ['', 'low', 'low-mid', 'okay', 'good', 'strong'];
+    const moodTxt = h.mood ? labels[h.mood] : '—';
+    const energyTxt = h.energy ? labels[h.energy] : '—';
+    let snippet = '';
+    if (h.journal) snippet = h.journal;
+    else if (h.conversation && h.conversation.length > 0) {
+      const firstUser = h.conversation.find(m => m.role === 'user');
+      if (firstUser) snippet = firstUser.content;
+    }
+    if (snippet.length > 120) snippet = snippet.slice(0, 117) + '...';
+    const safe = snippet.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    div.innerHTML = `<div class="history-date">${h.dateStr}</div><div class="history-mood"><span>Mood: ${moodTxt}</span><span>Energy: ${energyTxt}</span></div>${safe ? `<div class="history-snippet">"${safe}"</div>` : ''}`;
+    list.appendChild(div);
+  });
+}
+
+function renderSettings() {
+  document.getElementById('settings-name').textContent = state.name || '—';
+  document.getElementById('settings-apikey').textContent = state.apiKey ? `${state.apiKey.slice(0, 7)}…${state.apiKey.slice(-4)}` : 'Not set';
+  document.getElementById('settings-count').textContent = state.history.length;
+}
+
+function resetForNewCheckin() {
+  state.todayConversation = [];
+  state.mood = null; state.energy = null; state.journal = ''; state.verseShown = null;
+  document.getElementById('check-input').value = '';
+  document.getElementById('reply-input').value = '';
+  document.getElementById('journal-input').value = '';
+  document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('mood-display').textContent = '—';
+  document.getElementById('energy-display').textContent = '—';
+}
+
+function startCheckin() {
+  renderHeader();
+  document.getElementById('greeting-text').textContent = greetingText();
+  showScreen('screen-greeting');
+}
+
+function init() {
+  loadState();
+  setupScale('mood-scale', 'mood-display', 'mood');
+  setupScale('energy-scale', 'energy-display', 'energy');
+
+  document.getElementById('begin-btn').addEventListener('click', () => {
+    const v = document.getElementById('name-input').value.trim();
+    if (!v) { document.getElementById('name-input').focus(); return; }
+    state.name = v; saveName(v); showScreen('screen-apikey');
+  });
+  document.getElementById('name-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('begin-btn').click(); });
+
+  document.getElementById('apikey-save').addEventListener('click', () => {
+    const v = document.getElementById('apikey-input').value.trim();
+    if (!v) { document.getElementById('apikey-input').focus(); return; }
+    state.apiKey = v; saveApiKey(v); startCheckin();
+  });
+  document.getElementById('apikey-skip').addEventListener('click', () => startCheckin());
+
+  document.getElementById('check-send').addEventListener('click', async () => {
+    const text = document.getElementById('check-input').value.trim();
+    if (!text) { document.getElementById('check-input').focus(); return; }
+    document.getElementById('check-input').value = '';
+    showScreen('screen-conversation');
+    await sendUserMessage(text);
+  });
+  document.getElementById('check-skip').addEventListener('click', () => {
+    state.todayConversation = [{ role: 'anchor', content: "Glad you're doing good. Let's keep moving." }];
+    showScreen('screen-mood');
+  });
+
+  document.getElementById('reply-send').addEventListener('click', async () => {
+    const text = document.getElementById('reply-input').value.trim();
+    if (!text) return;
+    await sendUserMessage(text);
+  });
+  document.getElementById('reply-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('reply-send').click(); }
+  });
+  document.getElementById('conv-done').addEventListener('click', () => showScreen('screen-mood'));
+
+  document.getElementById('mood-continue').addEventListener('click', () => {
+    if (!state.mood || !state.energy) { alert('Pick a number for each — even if it\'s a guess.'); return; }
+    renderVerse(); showScreen('screen-verse');
+  });
+
+  document.getElementById('verse-continue').addEventListener('click', () => {
+    state.journal = document.getElementById('journal-input').value.trim();
+    saveCheckin(); renderTrend(); showScreen('screen-close');
+  });
+
+  document.getElementById('give-it-up').addEventListener('click', () => {
+    document.getElementById('breath-overlay').classList.add('active');
+    let phase = 0;
+    const phases = ['Breathe in', 'Hold', 'Breathe out', 'Rest'];
+    const interval = setInterval(() => {
+      phase = (phase + 1) % 4;
+      document.getElementById('breath-text').textContent = phases[phase];
+    }, 2000);
+    document.getElementById('breath-done').onclick = () => {
+      clearInterval(interval);
+      document.getElementById('breath-overlay').classList.remove('active');
+    };
+  });
+
+  document.getElementById('view-history').addEventListener('click', () => { renderHistory(); showScreen('screen-history'); });
+  document.getElementById('restart').addEventListener('click', () => { resetForNewCheckin(); startCheckin(); });
+  document.getElementById('history-back').addEventListener('click', () => showScreen('screen-close'));
+
+  document.getElementById('settings-btn').addEventListener('click', () => { renderSettings(); showScreen('screen-settings'); });
+  document.getElementById('settings-back').addEventListener('click', () => startCheckin());
+  document.getElementById('change-name').addEventListener('click', () => {
+    const v = prompt('What should I call you?', state.name || '');
+    if (v && v.trim()) { state.name = v.trim(); saveName(state.name); renderSettings(); }
+  });
+  document.getElementById('change-apikey').addEventListener('click', () => {
+    const v = prompt('Paste your Claude API key (starts with sk-ant-...). Leave blank to remove.', '');
+    if (v === null) return;
+    if (v.trim() === '') { state.apiKey = null; localStorage.removeItem(KEYS.apiKey); }
+    else { state.apiKey = v.trim(); saveApiKey(state.apiKey); }
+    renderSettings();
+  });
+  document.getElementById('export-data').addEventListener('click', () => {
+    const data = JSON.stringify({ name: state.name, history: state.history }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `anchor-export-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById('erase-data').addEventListener('click', () => {
+    if (confirm('This will erase all your check-ins, name, and API key from this device. Are you sure?')) {
+      clearAll();
+      state = { name: null, apiKey: null, todayConversation: [], mood: null, energy: null, journal: '', verseShown: null, history: [] };
+      document.getElementById('header').style.display = 'none';
+      showScreen('screen-onboarding');
+    }
+  });
+
+  if (!state.name) showScreen('screen-onboarding');
+  else startCheckin();
+}
+
+init();
+</script>
+
+</body>
+</html>
